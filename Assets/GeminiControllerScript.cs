@@ -1,31 +1,35 @@
-using System;
+﻿using System;
 using System.Collections;
+using System.Linq;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
+//using System.Text.Json;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 
 public class GeminiControllerScript : MonoBehaviour
 {
-    private string baseEndPoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyBu8JgA0G9zv5gXcXNHUrrAIy11WKWEGfY";
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    public string message;
+    public SpeechServiceControllerScript speechServiceController;
+
+    private string geminiEndPoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyBu8JgA0G9zv5gXcXNHUrrAIy11WKWEGfY";
+
     void Start()
     {
-        StartCoroutine(Talk("hi"));
+        StartCoroutine(GetReply(message));
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
-    IEnumerator Talk(string message)
+    IEnumerator GetReply(string message)
     {
         string jsonMessage = $"{{\"contents\": [{{ \"parts\": [ {{  \"text\":\"{message}\" }}]}} ]}}";
-        Debug.Log(jsonMessage);
+
         byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonMessage);
-        UnityWebRequest request = new UnityWebRequest(baseEndPoint,"POST");
+        UnityWebRequest request = new UnityWebRequest(geminiEndPoint,"POST");
         request.uploadHandler=new UploadHandlerRaw(jsonBytes);
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
@@ -35,11 +39,15 @@ public class GeminiControllerScript : MonoBehaviour
         if (request.result == UnityWebRequest.Result.Success)
         {
             Debug.Log(request.downloadHandler.text);
+            string strReply = request.downloadHandler.text;
+            var jsonReply = JObject.Parse(strReply);
+            string replyMessage = jsonReply["candidates"][0]["content"]["parts"][0]["text"].ToString();
+            speechServiceController.Speak(replyMessage);
+
         }
         else
         {
             Debug.Log(request.error);
         }
-
-    }
+    }    
 }
