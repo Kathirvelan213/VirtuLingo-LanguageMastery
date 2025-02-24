@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using Microsoft.CognitiveServices.Speech;
@@ -26,6 +25,9 @@ public class TextToSpeechController : MonoBehaviour
 
     public async Task Speak(string textChunk)
     {
+        try
+        {
+
         using (var result = await synthesizer.SpeakTextAsync(textChunk))
         {
             if (result.Reason == ResultReason.SynthesizingAudioCompleted)
@@ -36,6 +38,11 @@ public class TextToSpeechController : MonoBehaviour
             {
                 Debug.LogError($"Error: {result.Reason}");
             }
+        }
+        }
+        catch (Exception ex)
+        {
+            Debug.Log(ex.ToString());
         }
     }
 }

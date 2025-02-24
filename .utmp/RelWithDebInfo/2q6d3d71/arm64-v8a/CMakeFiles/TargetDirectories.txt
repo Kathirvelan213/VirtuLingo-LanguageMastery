@@ -1,0 +1,5 @@
+C:/Pers/Projects/Unity Projects/VirtuLingo-LanguageMastery/.utmp/RelWithDebInfo/2q6d3d71/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Pers/Projects/Unity Projects/VirtuLingo-LanguageMastery/.utmp/RelWithDebInfo/2q6d3d71/arm64-v8a/CMakeFiles/rebuild_cache.dir
+C:/Pers/Projects/Unity Projects/VirtuLingo-LanguageMastery/.utmp/RelWithDebInfo/2q6d3d71/arm64-v8a/GameActivity/CMakeFiles/game.dir
+C:/Pers/Projects/Unity Projects/VirtuLingo-LanguageMastery/.utmp/RelWithDebInfo/2q6d3d71/arm64-v8a/GameActivity/CMakeFiles/edit_cache.dir
+C:/Pers/Projects/Unity Projects/VirtuLingo-LanguageMastery/.utmp/RelWithDebInfo/2q6d3d71/arm64-v8a/GameActivity/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,2 @@
+C:\Pers\Projects\Unity Projects\VirtuLingo-LanguageMastery\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\CMakeLists.txt
+C:\Pers\Projects\Unity Projects\VirtuLingo-LanguageMastery\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\CMakeLists.txt

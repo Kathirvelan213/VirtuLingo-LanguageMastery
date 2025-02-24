@@ -1,11 +1,10 @@
 ﻿using UnityEngine;
-using UnityEngine.Networking;
 using System;
-using System.Collections;
-using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 using Microsoft.CognitiveServices.Speech;
 using Microsoft.CognitiveServices.Speech.Audio;
 using System.Threading.Tasks;
+using Assets;
 
 
 public class SpeechToTextController : MonoBehaviour
@@ -26,18 +25,22 @@ public class SpeechToTextController : MonoBehaviour
     private float lastSpokenTime;
 
     private int lastSamplePosition = 0;
+    private bool isTranslating = false;
 
     private void Start()
     {
     }
-    public void StartRecord(Func<string,Task> callback)
+    public void StartRecord(DialogueList RecentDialogue,Func<string,Task> callback)
     {
-        InitializeSpeechRecognizer(callback);
+        InitializeSpeechRecognizer(RecentDialogue,callback);
         StartMicrophone();
     }
 
-    private void InitializeSpeechRecognizer(Func<string,Task> callback)
+    private void InitializeSpeechRecognizer(DialogueList RecentDialogue,Func<string,Task> callback)
     {
+        try
+        {
+
         print("work");
         var config = SpeechConfig.FromSubscription(subscriptionKey, region);
         pushStream = AudioInputStream.CreatePushStream();
@@ -50,7 +53,10 @@ public class SpeechToTextController : MonoBehaviour
         {
             if (e.Result.Reason == ResultReason.RecognizedSpeech)
             {
+                isTranslating=true;
+                RecentDialogue.Push("Customer"+e.Result.Text);
                 await callback(e.Result.Text);
+                isTranslating=false;
                 Debug.Log($"Recognized: {e.Result.Text}");
             }
         };
@@ -65,11 +71,16 @@ public class SpeechToTextController : MonoBehaviour
             Debug.Log("Session Stopped.");
             isRecognizing = false;
         };
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e.ToString());
+        }
     }
 
     private void StartMicrophone()
     {
-        if (Microphone.devices.Length > 0)
+        if (Microphone.devices.Length > 0 )
         {
             microphoneDevice = Microphone.devices[0];
             micClip = Microphone.Start(microphoneDevice, true, 10, sampleRate); 
@@ -82,7 +93,10 @@ public class SpeechToTextController : MonoBehaviour
 
     void Update()
     {
-        if (Microphone.IsRecording(microphoneDevice))
+        try
+        {
+
+        if (!isTranslating && Microphone.IsRecording(microphoneDevice))
         {
             int micPosition = Microphone.GetPosition(microphoneDevice);
 
@@ -116,6 +130,12 @@ public class SpeechToTextController : MonoBehaviour
                 }
                 lastSamplePosition = micPosition; 
             }
+
+        }
+        }
+        catch(Exception e)
+        {
+            Debug.LogError(e.ToString());
         }
     }
 
