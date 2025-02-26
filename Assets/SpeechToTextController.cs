@@ -5,6 +5,9 @@ using Microsoft.CognitiveServices.Speech;
 using Microsoft.CognitiveServices.Speech.Audio;
 using System.Threading.Tasks;
 using Assets;
+using UnityEngine.UIElements;
+
+
 
 
 public class SpeechToTextController : MonoBehaviour
@@ -27,50 +30,54 @@ public class SpeechToTextController : MonoBehaviour
     private int lastSamplePosition = 0;
     private bool isTranslating = false;
 
+
     private void Start()
     {
+        
     }
-    public void StartRecord(DialogueList RecentDialogue,Func<string,Task> callback)
+    public void StartRecord(DialogueList RecentDialogue, Func<string, Task> callback1, Func<string, Task> callback2)
     {
-        InitializeSpeechRecognizer(RecentDialogue,callback);
+        InitializeSpeechRecognizer(RecentDialogue, callback1,callback2);
         StartMicrophone();
     }
 
-    private void InitializeSpeechRecognizer(DialogueList RecentDialogue,Func<string,Task> callback)
+    private void InitializeSpeechRecognizer(DialogueList RecentDialogue, Func<string, Task> callback1, Func<string, Task> callback2)
     {
         try
         {
+            var config = SpeechConfig.FromSubscription(subscriptionKey, region);
+            config.SpeechRecognitionLanguage = "en-IN";
+            pushStream = AudioInputStream.CreatePushStream();
 
-        print("work");
-        var config = SpeechConfig.FromSubscription(subscriptionKey, region);
-        pushStream = AudioInputStream.CreatePushStream();
+            var audioConfig = AudioConfig.FromStreamInput(pushStream);
 
-        var audioConfig = AudioConfig.FromStreamInput(pushStream);
+            recognizer = new SpeechRecognizer(config, audioConfig);
 
-        recognizer = new SpeechRecognizer(config, audioConfig);
-
-        recognizer.Recognized += async  (s, e) =>
-        {
-            if (e.Result.Reason == ResultReason.RecognizedSpeech)
+            recognizer.Recognized += async (s, e) =>
             {
-                isTranslating=true;
-                RecentDialogue.Push("Customer"+e.Result.Text);
-                await callback(e.Result.Text);
-                isTranslating=false;
-                Debug.Log($"Recognized: {e.Result.Text}");
-            }
-        };
+                if (e.Result.Reason == ResultReason.RecognizedSpeech)
+                {
+                    
+                    isTranslating = true;
+                    RecentDialogue.Push("Customer: " + e.Result.Text);
+                    await callback1(e.Result.Text);
+                    await callback2(e.Result.Text);
+                    isTranslating = false;
+                    Debug.Log($"Recognized: {e.Result.Text}");
+                }
+            };
 
-        recognizer.Canceled += (s, e) =>
-        {
-            Debug.LogError($"Recognition Canceled: {e.Reason}");
-        };
 
-        recognizer.SessionStopped += (s, e) =>
-        {
-            Debug.Log("Session Stopped.");
-            isRecognizing = false;
-        };
+            recognizer.Canceled += (s, e) =>
+            {
+                Debug.LogError($"Recognition Cancelled: {e.Reason}");
+            };
+
+            recognizer.SessionStopped += (s, e) =>
+            {
+                Debug.Log("Session Stopped.");
+                isRecognizing = false;
+            };
         }
         catch (Exception e)
         {
@@ -80,10 +87,10 @@ public class SpeechToTextController : MonoBehaviour
 
     private void StartMicrophone()
     {
-        if (Microphone.devices.Length > 0 )
+        if (Microphone.devices.Length > 0)
         {
             microphoneDevice = Microphone.devices[0];
-            micClip = Microphone.Start(microphoneDevice, true, 10, sampleRate); 
+            micClip = Microphone.Start(microphoneDevice, true, 10, sampleRate);
         }
         else
         {
@@ -96,44 +103,44 @@ public class SpeechToTextController : MonoBehaviour
         try
         {
 
-        if (!isTranslating && Microphone.IsRecording(microphoneDevice))
-        {
-            int micPosition = Microphone.GetPosition(microphoneDevice);
-
-            if (micPosition < lastSamplePosition)
+            if (!isTranslating && Microphone.IsRecording(microphoneDevice))
             {
-                lastSamplePosition = 0;
-            }
+                int micPosition = Microphone.GetPosition(microphoneDevice);
 
-            int sampleCount = micPosition - lastSamplePosition;
-
-            if (sampleCount > 0)
-            {
-                float[] samples = new float[sampleCount];
-                micClip.GetData(samples, lastSamplePosition);
-
-                float volume = CalculateVolume(samples);
-
-                if (volume > silenceThreshold)
+                if (micPosition < lastSamplePosition)
                 {
-                    lastSpokenTime = Time.time;
-                    if (!isRecognizing)
+                    lastSamplePosition = 0;
+                }
+
+                int sampleCount = micPosition - lastSamplePosition;
+
+                if (sampleCount > 0)
+                {
+                    float[] samples = new float[sampleCount];
+                    micClip.GetData(samples, lastSamplePosition);
+
+                    float volume = CalculateVolume(samples);
+
+                    if (volume > silenceThreshold)
                     {
-                        StartRecognition();
+                        lastSpokenTime = Time.time;
+                        if (!isRecognizing)
+                        {
+                            StartRecognition();
+                        }
+                        byte[] audioData = ConvertAudioToByteArray(samples);
+                        pushStream.Write(audioData);
                     }
-                    byte[] audioData = ConvertAudioToByteArray(samples);
-                    pushStream.Write(audioData);
+                    else if (isRecognizing && (Time.time - lastSpokenTime > silenceDuration))
+                    {
+                        StopRecognition();
+                    }
+                    lastSamplePosition = micPosition;
                 }
-                else if (isRecognizing && (Time.time - lastSpokenTime > silenceDuration))
-                {
-                    StopRecognition();
-                }
-                lastSamplePosition = micPosition; 
-            }
 
+            }
         }
-        }
-        catch(Exception e)
+        catch (Exception e)
         {
             Debug.LogError(e.ToString());
         }

@@ -4,13 +4,15 @@ using System.Text;
 using UnityEngine;
 using Microsoft.CognitiveServices.Speech;
 using System.Threading.Tasks;
+using PimDeWitte.UnityMainThreadDispatcher;
 
 public class TextToSpeechController : MonoBehaviour
 {
     private SpeechSynthesizer synthesizer;
-    private const string SUBSCRIPTION_KEY = "AmnfYu09JxX8C50Tl0YRX5jSE06PLMeDydjIt53CDkGlC8ICiehTJQQJ99BBACGhslBXJ3w3AAAYACOGr4Wj";  // Replace with your key
+    private const string SUBSCRIPTION_KEY = "AmnfYu09JxX8C50Tl0YRX5jSE06PLMeDydjIt53CDkGlC8ICiehTJQQJ99BBACGhslBXJ3w3AAAYACOGr4Wj";
     private const string REGION = "centralindia";
-   
+    public Animator animator;
+    private bool isIntrodruction = true;
     async void Start()
     {
         await InitializeTTS();
@@ -27,18 +29,34 @@ public class TextToSpeechController : MonoBehaviour
     {
         try
         {
-
-        using (var result = await synthesizer.SpeakTextAsync(textChunk))
-        {
-            if (result.Reason == ResultReason.SynthesizingAudioCompleted)
-            {
-                Debug.Log($"Spoken: {textChunk}");
+            if (isIntrodruction)
+            {   
+                isIntrodruction=false;
             }
             else
             {
-                Debug.LogError($"Error: {result.Reason}");
+                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                {
+                    System.Random random = new System.Random();
+                    double randomDouble = random.NextDouble();
+                    if (randomDouble > 0.4)
+                    {
+
+                    animator.SetTrigger("TalkTrigger");
+                    }
+                });
             }
-        }
+            using (var result = await synthesizer.SpeakTextAsync(textChunk))
+            {
+                if (result.Reason == ResultReason.SynthesizingAudioCompleted)
+                {
+                    Debug.Log($"Spoken: {textChunk}");
+                }
+                else
+                {
+                    Debug.LogError($"Error: {result.Reason}");
+                }
+            }
         }
         catch (Exception ex)
         {

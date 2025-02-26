@@ -8,10 +8,6 @@ using System.IO;
 using System.Linq;
 using Assets;
 
-
-
-
-
 public class GeminiControllerScript : MonoBehaviour
 {
     //public string message;
@@ -24,16 +20,11 @@ public class GeminiControllerScript : MonoBehaviour
     void Start()
     {
         httpClient.DefaultRequestHeaders.Add("X-Goog-Api-Key", apiKey);
-        //await GetResponse("hi", (string x) => Debug.Log("kat"));
-        Debug.Log("hi");
     }
-
-
     public async Task GetResponse(string message, string promptInstructions, DialogueList RecentDialogue, Func<string, Task> callback)
     {
         try
         {
-
             string strRecentDialogue = string.Join(";", RecentDialogue);
             Debug.Log($"{promptInstructions + strRecentDialogue}");
             string requestBody = $"{{\"contents\": [{{ \"parts\": [ {{  \"text\":\"{promptInstructions + strRecentDialogue}\" }}]}} ]}}";
@@ -45,8 +36,6 @@ public class GeminiControllerScript : MonoBehaviour
             using (var stream = await response.Content.ReadAsStreamAsync())
             using (var reader = new StreamReader(stream))
             {
-
-
                 while (!reader.EndOfStream)
                 {
                     string line = await reader.ReadLineAsync();
@@ -55,7 +44,7 @@ public class GeminiControllerScript : MonoBehaviour
                         string strReply = line.Substring(5).Trim();
                         var jsonResponse = JObject.Parse(strReply);
                         string replyMessage = jsonResponse["candidates"][0]["content"]["parts"][0]["text"].ToString();
-                        RecentDialogue.Push("Cashier:" + replyMessage);
+                        RecentDialogue.Push("Cashier: " + replyMessage);
                         await callback(replyMessage);
                         Debug.Log($"Reply: {replyMessage}");
                     }

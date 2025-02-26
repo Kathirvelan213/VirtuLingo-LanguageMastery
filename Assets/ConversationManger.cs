@@ -7,22 +7,27 @@ public class ConversationManger : MonoBehaviour
     public GeminiControllerScript geminiControllerScript;
     public TextToSpeechController textToSpeechController;
     public SpeechToTextController speechToTextController;
+    public GrammarAnalyzer grammarAnalyzer;
 
-    private DialogueList RecentDialogue=new DialogueList();
-    
-    private string promptInstructions= "you are a model being used to help people practice a new language. Pretend to be a cashier at a counter at a supermarket.You do not have to do any action, just speak. Here are some details you can use, and you dont have to say this unless asked . your name is Ravi, you are a 24 year old. give simple sentences, so that they can understand you, cause they are just learning the language. continue on with the following conversation";
+    public Animator animator;
+
+    private DialogueList RecentDialogue = new DialogueList();
+
+    private string promptInstructions = "you are a model being used to help people practice a new language. Pretend to be a cashier at a counter at a supermarket.You do not have to do any action, just speak. Here are some details you can use, and you dont have to say this unless asked . your name is Ravi, you are a 24 year old. give simple sentences, so that they can understand you, cause they are just learning the language.Do not correct them if they are wrong with their grammar, just continue with the conversation. Do not repeat the conversation given next. continue on with the following conversation";
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
-    {
-        RecentDialogue.Enqueue("Cashier: Hello, how may i help you?");
+    {   
+        RecentDialogue.Push("Cashier: Hello, how may i help you?");
+        animator.SetTrigger("WaveTrigger");
         textToSpeechController.Speak("Hello, how may i help you?");
-        SpeechLoop(); 
+        SpeechLoop();
     }
 
     void SpeechLoop()
     {
         speechToTextController.StartRecord(RecentDialogue,
-            callback: (string message) => geminiControllerScript.GetResponse(message, promptInstructions, RecentDialogue,
-                callback: (string message) => textToSpeechController.Speak(message)));
+            callback1: (string message) => grammarAnalyzer.GrammarCorrect(message),
+            callback2: (string message) => geminiControllerScript.GetResponse(message, promptInstructions, RecentDialogue,
+                callback: (string message) => textToSpeechController.Speak(message))) ;
     }
 }
