@@ -6,6 +6,9 @@ using Microsoft.CognitiveServices.Speech.Audio;
 using System.Threading.Tasks;
 using Assets;
 using UnityEngine.UIElements;
+using System.IO;
+using System.Linq;
+using System.Collections;
 
 
 
@@ -15,6 +18,127 @@ public class SpeechToTextController : MonoBehaviour
     private string subscriptionKey = "AmnfYu09JxX8C50Tl0YRX5jSE06PLMeDydjIt53CDkGlC8ICiehTJQQJ99BBACGhslBXJ3w3AAAYACOGr4Wj";
     private string region = "centralindia";
 
+    //public float silenceThreshold = 0.02f; // Adjust this value based on your microphone
+    //public float silenceDuration = 2.0f;   // Stop recording after 2 seconds of silence
+    //public int sampleRate = 16000;
+
+    //private SpeechRecognizer recognizer;
+    //private AudioClip micClip;
+    //private string microphoneDevice;
+    //private bool isRecording = false;
+    //private bool isProcessing = false;
+    //private float lastSpokenTime;
+    //private int lastSamplePosition = 0;
+    //private List<float> audioBuffer = new List<float>(); // Buffer for audio data
+
+    //public void StartRecord(DialogueList RecentDialogue, Func<string, Task> callback1, Func<string, Task> callback2)
+    //{
+    //    StartMicrophone();
+    //}
+
+    //private void StartMicrophone()
+    //{
+    //    if (Microphone.devices.Length > 0)
+    //    {
+    //        microphoneDevice = Microphone.devices[0];
+    //        micClip = Microphone.Start(microphoneDevice, true, 10, sampleRate);
+    //    }
+    //    else
+    //    {
+    //        Debug.LogError("No microphone detected!");
+    //    }
+    //}
+
+    //void Update()
+    //{
+    //    if (Microphone.IsRecording(microphoneDevice) && !isProcessing)
+    //    {
+    //        int micPosition = Microphone.GetPosition(microphoneDevice);
+    //        if (micPosition < lastSamplePosition) lastSamplePosition = 0;
+    //        int sampleCount = micPosition - lastSamplePosition;
+
+    //        if (sampleCount > 0)
+    //        {
+    //            float[] samples = new float[sampleCount];
+    //            micClip.GetData(samples, lastSamplePosition);
+
+    //            float volume = CalculateVolume(samples);
+
+    //            if (volume > silenceThreshold)
+    //            {
+    //                lastSpokenTime = Time.time;
+    //                isRecording = true;
+    //                audioBuffer.AddRange(samples);
+    //            }
+    //            else if (isRecording && (Time.time - lastSpokenTime > silenceDuration))
+    //            {
+    //                isRecording = false;
+    //                StartCoroutine(ProcessAudio());
+    //            }
+
+    //            lastSamplePosition = micPosition;
+    //        }
+    //    }
+    //}
+
+    //private float CalculateVolume(float[] samples)
+    //{
+    //    float sum = samples.Sum(sample => sample * sample);
+    //    return Mathf.Sqrt(sum / samples.Length);
+    //}
+
+    //private IEnumerator ProcessAudio()
+    //{
+    //    if (audioBuffer.Count == 0) yield break;
+
+    //    isProcessing = true;
+
+    //    // Convert buffered audio to byte array
+    //    byte[] audioData = ConvertAudioToByteArray(audioBuffer.ToArray());
+
+    //    // Send to Azure Speech
+    //    yield return StartCoroutine(SendToAzureSpeech(audioData));
+
+    //    // Clear buffer
+    //    audioBuffer.Clear();
+    //    isProcessing = false;
+    //}
+
+    //private byte[] ConvertAudioToByteArray(float[] samples)
+    //{
+    //    byte[] byteArray = new byte[samples.Length * 2];
+    //    for (int i = 0; i < samples.Length; i++)
+    //    {
+    //        short sample = (short)(samples[i] * short.MaxValue);
+    //        byteArray[i * 2] = (byte)(sample & 0xFF);
+    //        byteArray[i * 2 + 1] = (byte)((sample >> 8) & 0xFF);
+    //    }
+    //    return byteArray;
+    //}
+
+    //private IEnumerator SendToAzureSpeech(byte[] audioData)
+    //{
+    //    var config = SpeechConfig.FromSubscription(subscriptionKey, region);
+    //    using var pushStream = AudioInputStream.CreatePushStream();
+    //    using var audioConfig = AudioConfig.FromStreamInput(pushStream);
+    //    using var speechRecognizer = new SpeechRecognizer(config, audioConfig);
+
+    //    // Write full audio data at once
+    //    pushStream.Write(audioData);
+    //    pushStream.Close();
+
+    //    Task<SpeechRecognitionResult> recognitionTask = speechRecognizer.RecognizeOnceAsync();
+    //    while (!recognitionTask.IsCompleted) yield return null;
+
+    //    if (recognitionTask.Result != null && recognitionTask.Result.Reason == ResultReason.RecognizedSpeech)
+    //    {
+    //        Debug.Log($"Recognized Speech: {recognitionTask.Result.Text}");
+    //    }
+    //    else
+    //    {
+    //        Debug.LogWarning("No speech recognized.");
+    //    }
+    //}
 
     private SpeechRecognizer recognizer;
     private PushAudioInputStream pushStream;
@@ -33,11 +157,11 @@ public class SpeechToTextController : MonoBehaviour
 
     private void Start()
     {
-        
+
     }
     public void StartRecord(DialogueList RecentDialogue, Func<string, Task> callback1, Func<string, Task> callback2)
     {
-        InitializeSpeechRecognizer(RecentDialogue, callback1,callback2);
+        InitializeSpeechRecognizer(RecentDialogue, callback1, callback2);
         StartMicrophone();
     }
 
@@ -57,7 +181,7 @@ public class SpeechToTextController : MonoBehaviour
             {
                 if (e.Result.Reason == ResultReason.RecognizedSpeech)
                 {
-                    
+
                     isTranslating = true;
                     RecentDialogue.Push("Customer: " + e.Result.Text);
                     await callback1(e.Result.Text);
@@ -184,97 +308,4 @@ public class SpeechToTextController : MonoBehaviour
 
 
 
-    //private string subscriptionKey = "AmnfYu09JxX8C50Tl0YRX5jSE06PLMeDydjIt53CDkGlC8ICiehTJQQJ99BBACGhslBXJ3w3AAAYACOGr4Wj";
-    //private string region = "centralindia";
-    //float silenceTimeThreshold = 2.5f;
-    //float silenceLevelThreshold = 0.0005f;
-
-
-    //public void StartRecord(System.Action<string> callback)
-    //{
-    //    StartCoroutine(RecordAndSendAudio(callback));
-    //}
-
-    //IEnumerator RecordAndSendAudio(System.Action<string> callback)
-    //{
-    //    // Start recording audio from microphone
-    //    int maxTime = 30;
-    //    bool isRecording = false;
-    //    float silenceTimer = 0f;
-    //    AudioClip audioClip = Microphone.Start(null, false, maxTime, 16000);
-    //    //yield return new WaitForSeconds(maxTime);
-    //    while (!isRecording)
-    //    {
-    //        if (!isSilent(audioClip))
-    //        {
-    //            isRecording = true;
-    //        }
-    //    }
-    //    while (isRecording)
-    //    {
-    //        yield return null;
-    //        if (isSilent(audioClip))
-    //        {
-    //            silenceTimer += Time.deltaTime;
-    //            if (silenceTimer >= silenceTimeThreshold) 
-    //            {
-    //                isRecording = false;
-    //                Microphone.End(null);
-    //                Debug.Log("stopped recording");
-    //            }
-    //        }
-    //        else
-    //        {
-    //            silenceTimer = 0f;
-    //        }
-    //    }
-
-    //    byte[] wavData = WavUtility.FromAudioClip(audioClip);
-    //    yield return StartCoroutine(SendToAzureSpeechAPI(wavData, callback));
-    //}
-    //bool isSilent(AudioClip clip)
-    //{
-    //    int sampleWindow = 1024; // Check a small sample window
-    //    float[] samples = new float[sampleWindow];
-    //    int micPosition = Microphone.GetPosition(null) - sampleWindow;
-
-    //    if (micPosition < 0) return false;
-
-    //    clip.GetData(samples, micPosition); // Get the latest audio chunk
-
-    //    float sum = 0f;
-    //    for (int i = 0; i < samples.Length; i++)
-    //    {
-    //        sum += Mathf.Abs(samples[i]);
-    //    }
-
-    //    float averageVolume = sum / samples.Length;
-    //    return averageVolume < silenceLevelThreshold; // Silence if below threshold
-    //}
-
-    //IEnumerator SendToAzureSpeechAPI(byte[] audioData, System.Action<string> callback)
-    //{
-    //    string url = $"https://{region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US";
-
-    //    UnityWebRequest request = new UnityWebRequest(url, "POST");
-    //    request.uploadHandler = new UploadHandlerRaw(audioData);
-    //    request.downloadHandler = new DownloadHandlerBuffer();
-
-    //    request.SetRequestHeader("Content-Type", "audio/wav");
-    //    request.SetRequestHeader("Ocp-Apim-Subscription-Key", subscriptionKey);
-
-    //    yield return request.SendWebRequest();
-
-    //    if (request.result == UnityWebRequest.Result.Success)
-    //    {
-    //        var jsonReply = JObject.Parse(request.downloadHandler.text);
-    //        string message = jsonReply["DisplayText"].ToString();
-    //        Debug.Log("Response: " + message);
-    //        callback(message);
-    //    }
-    //    else
-    //    {
-    //        Debug.LogError("Error: " + request.error);
-    //    }
-    //}   
 }
