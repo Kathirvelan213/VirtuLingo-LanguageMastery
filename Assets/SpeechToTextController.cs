@@ -170,7 +170,7 @@ public class SpeechToTextController : MonoBehaviour
         try
         {
             var config = SpeechConfig.FromSubscription(subscriptionKey, region);
-            config.SpeechRecognitionLanguage = "en-IN";
+            config.SpeechRecognitionLanguage = "en-uk";
             pushStream = AudioInputStream.CreatePushStream();
 
             var audioConfig = AudioConfig.FromStreamInput(pushStream);

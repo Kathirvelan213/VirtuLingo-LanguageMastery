@@ -50,8 +50,8 @@ public class GrammarAnalyzer : MonoBehaviour
                         string replyMessage = jsonResponse["candidates"][0]["content"]["parts"][0]["text"].ToString();
                         UnityMainThreadDispatcher.Instance().Enqueue(() =>
                         {
-                            dialogueSpoken.text = message;
-                            grammarCorrectedText.text = replyMessage;
+                            dialogueSpoken.text ="You: "+ message;
+                            grammarCorrectedText.text ="Corrected: " +replyMessage;
                         });
 
                         Debug.Log($"Reply: {replyMessage}");
